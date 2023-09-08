@@ -96,7 +96,7 @@ namespace IPXRelay
             else
             {
                 // Forward
-                foreach (var connection in Connections.Where(c => c.Connected && c.Endpoint.Address == destination.Address && c.Endpoint.Port == destination.Port))
+                foreach (var connection in Connections.Where(c => c.Connected && c.Endpoint.Address.Equals(destination.Address) && c.Endpoint.Port == destination.Port))
                 {
                     Logger?.LogTrace("Sending IPX packet | Source: {SourceAddress}:{SourcePort} | Destination: {DestinationAddress}:{DestinationPort}", source.Address, source.Port, connection.Endpoint.Address, connection.Endpoint.Port);
 
