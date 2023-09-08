@@ -12,7 +12,7 @@ namespace IPXRelay
         public IPXNode(BinaryReader reader)
         {
             Host = reader.ReadUInt32();
-            Port = reader.ReadUInt16(Endianness.Big);
+            Port = reader.ReadUInt16();
         }
 
         public IPXNode(IPEndPoint endPoint)
