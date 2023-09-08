@@ -19,6 +19,9 @@ namespace IPXRelay
         private byte[] Buffer = new byte[65536];
         private HashSet<IPXClientConnection> Connections = new HashSet<IPXClientConnection>();
 
+        public delegate void OnClientConnectedHandler(object sender, ClientConnectedEventArgs e);
+        public event OnClientConnectedHandler OnClientConnected;
+
         public IPXRelay(ILogger logger = null) {
             Logger = logger;
 
@@ -70,6 +73,13 @@ namespace IPXRelay
                         ReserveClient((IPEndPoint)remoteEndPoint);
 
                         await AcknowledgeClientAsync(localEndPoint, (IPEndPoint)remoteEndPoint);
+
+                        OnClientConnected.Invoke(this, new ClientConnectedEventArgs
+                        {
+                            RemoteEndPoint = (IPEndPoint)remoteEndPoint,
+                            LocalEndPoint = localEndPoint,
+                            Packet = packet
+                        });
                     }
                 }
 
