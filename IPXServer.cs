@@ -84,7 +84,7 @@ namespace IPXRelay
                 Logger?.LogTrace("Broadcasting packet");
 
                 // Broadcast
-                foreach (var connection in Connections.Where(c => c.Connected && (c.Endpoint.Address != source.Address && c.Endpoint.Port != source.Port)))
+                foreach (var connection in Connections.Where(c => c.Connected))
                 {
                     Logger?.LogTrace("Sending IPX packet | Source: {SourceAddress}:{SourcePort} | Destination: {DestinationAddress}:{DestinationPort}", source.Address, source.Port, connection.Endpoint.Address, connection.Endpoint.Port);
 
