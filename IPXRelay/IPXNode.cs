@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Net;
 
-namespace IPXRelay
+namespace IPXRelayDotNet
 {
     public class IPXNode
     {

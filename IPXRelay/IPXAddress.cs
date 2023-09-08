@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace IPXRelay
+namespace IPXRelayDotNet
 {
     public class IPXAddress
     {

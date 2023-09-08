@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Net;
 
-namespace IPXRelay
+namespace IPXRelayDotNet
 {
     [DebuggerDisplay("{Endpoint}, Connected = {Connected}")]
     public class IPXClientConnection

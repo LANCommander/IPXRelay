@@ -1,4 +1,4 @@
-﻿namespace IPXRelay
+﻿namespace IPXRelayDotNet
 {
     public enum Endianness
     {

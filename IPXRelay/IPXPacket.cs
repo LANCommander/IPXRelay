@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace IPXRelay
+namespace IPXRelayDotNet
 {
     public class IPXPacket
     {
@@ -29,7 +29,7 @@ namespace IPXRelay
 
         public byte[] Serialize()
         {
-            using (var ms  = new MemoryStream(Header.Length))
+            using (var ms = new MemoryStream(Header.Length))
             using (var packet = new BinaryWriter(ms))
             {
                 packet.Write(Header.Checksum);
@@ -37,11 +37,11 @@ namespace IPXRelay
                 packet.Write(Header.TransportControl);
                 packet.Write(Header.PacketType);
                 packet.Write(Header.DestinationAddress.Network);
-                packet.Write(((uint)Header.DestinationAddress.Node.Host.Address));
+                packet.Write((uint)Header.DestinationAddress.Node.Host.Address);
                 packet.Write(Header.DestinationAddress.Node.Port);
                 packet.Write(Header.DestinationAddress.Socket.SwapBytes());
                 packet.Write(Header.SourceAddress.Network);
-                packet.Write(((uint)Header.SourceAddress.Node.Host.Address));
+                packet.Write((uint)Header.SourceAddress.Node.Host.Address);
                 packet.Write(Header.SourceAddress.Node.Port);
                 packet.Write(Header.SourceAddress.Socket.SwapBytes());
 

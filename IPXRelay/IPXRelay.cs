@@ -6,7 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace IPXRelay
+namespace IPXRelayDotNet
 {
     public class IPXRelay : IDisposable
     {
@@ -25,13 +25,15 @@ namespace IPXRelay
         public delegate void OnPacketReceiveErrorHandler(object sender, PacketReceiveErrorArgs e);
         public event OnPacketReceiveErrorHandler OnPacketReceiveError;
 
-        public IPXRelay(ILogger logger = null) {
+        public IPXRelay(ILogger logger = null)
+        {
             Logger = logger;
 
             Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         }
 
-        public IPXRelay(int port, ILogger logger = null) {
+        public IPXRelay(int port, ILogger logger = null)
+        {
             Port = port;
             Logger = logger;
 
@@ -50,7 +52,7 @@ namespace IPXRelay
             Socket.Bind(new IPEndPoint(IPAddress.Any, Port));
 
             var localEndPoint = new IPEndPoint(IPAddress.Any, Port);
-            var remoteEndPoint = (EndPoint)(new IPEndPoint(IPAddress.Any, 0));
+            var remoteEndPoint = (EndPoint)new IPEndPoint(IPAddress.Any, 0);
 
             while (Socket.IsBound)
             {

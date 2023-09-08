@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace IPXRelay
+namespace IPXRelayDotNet
 {
     public class IPXPacketHeader
     {
@@ -13,7 +13,8 @@ namespace IPXRelay
 
         public IPXPacketHeader() { }
 
-        public IPXPacketHeader(BinaryReader reader) {
+        public IPXPacketHeader(BinaryReader reader)
+        {
             Checksum = reader.ReadUInt16(Endianness.Big);
             Length = reader.ReadUInt16(Endianness.Big);
             TransportControl = reader.ReadByte();

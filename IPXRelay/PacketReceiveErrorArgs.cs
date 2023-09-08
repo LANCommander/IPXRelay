@@ -5,7 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IPXRelay
+namespace IPXRelayDotNet
 {
     public class PacketReceiveErrorArgs : EventArgs
     {
