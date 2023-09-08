@@ -32,6 +32,11 @@ namespace IPXRelay
             Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         }
 
+        public void DisableLogging()
+        {
+            Logger = null;
+        }
+
         public async Task StartAsync()
         {
             Logger?.LogInformation("Binding IPX relay server on port {Port}", Port);
