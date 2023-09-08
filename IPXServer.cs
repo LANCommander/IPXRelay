@@ -28,7 +28,7 @@ namespace IPXRelay
             Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         }
 
-        public void Start()
+        public async Task StartAsync()
         {
             Logger?.LogInformation("Binding IPX relay server on port {Port}", Port);
 
@@ -36,17 +36,17 @@ namespace IPXRelay
 
             var localEndPoint = new IPEndPoint(IPAddress.Any, Port);
             var remoteEndPoint = (EndPoint)(new IPEndPoint(IPAddress.Any, 0));
-            var packetInfo = default(IPPacketInformation);
 
-            while (true)
+            while (Socket.IsBound)
             {
                 Logger?.LogTrace("Waiting for new IPX packet");
 
-                Socket.ReceiveMessageFrom(Buffer, 0, Buffer.Length, ref Flags, ref remoteEndPoint, out packetInfo);
+                var result = await Socket.ReceiveMessageFromAsync(Buffer, Flags, remoteEndPoint);
 
                 Logger?.LogTrace("-------- START PACKET --------");
 
-                localEndPoint = new IPEndPoint(packetInfo.Address, Port);
+                localEndPoint = new IPEndPoint(result.PacketInformation.Address, Port);
+                remoteEndPoint = result.RemoteEndPoint;
 
                 var packet = new IPXPacket(Buffer);
 
@@ -59,11 +59,12 @@ namespace IPXRelay
                         Logger?.LogTrace("Packet received is a registration request");
 
                         ReserveClient((IPEndPoint)remoteEndPoint);
-                        AcknowledgeClient(localEndPoint, (IPEndPoint)remoteEndPoint);
+
+                        await AcknowledgeClientAsync(localEndPoint, (IPEndPoint)remoteEndPoint);
                     }
                 }
 
-                SendPacket(packet);
+                await SendPacketAsync(packet);
 
                 Logger?.LogTrace("--------  END PACKET  --------");
             }
@@ -74,7 +75,7 @@ namespace IPXRelay
             Socket.Close();
         }
 
-        private void SendPacket(IPXPacket packet)
+        private async Task SendPacketAsync(IPXPacket packet)
         {
             var source = packet.Header.SourceAddress.Node.ToIPEndPoint();
             var destination = packet.Header.DestinationAddress.Node.ToIPEndPoint();
@@ -90,7 +91,7 @@ namespace IPXRelay
 
                     packet.Header.DestinationAddress.Node = new IPXNode(connection.Endpoint);
 
-                    Socket.SendTo(packet.Serialize(), connection.Endpoint);
+                    await Socket.SendToAsync(packet.Serialize(), connection.Endpoint);
                 }
             }
             else
@@ -102,7 +103,7 @@ namespace IPXRelay
 
                     packet.Header.DestinationAddress.Node = new IPXNode(connection.Endpoint);
 
-                    Socket.SendTo(packet.Serialize(), connection.Endpoint);
+                    await Socket.SendToAsync(packet.Serialize(), connection.Endpoint);
                 }
             }
         }
@@ -125,7 +126,7 @@ namespace IPXRelay
             });
         }
 
-        private void AcknowledgeClient(IPEndPoint localEndPoint, IPEndPoint remoteEndPoint)
+        private async Task AcknowledgeClientAsync(IPEndPoint localEndPoint, IPEndPoint remoteEndPoint)
         {
             var responsePacket = new IPXPacket()
             {
@@ -151,7 +152,7 @@ namespace IPXRelay
 
             Logger?.LogInformation("Acknowledge remote host {RemoteEndPoint}", remoteEndPoint);
 
-            Socket.SendTo(responsePacket.Serialize(), remoteEndPoint);
+            await Socket.SendToAsync(responsePacket.Serialize(), remoteEndPoint);
         }
 
         public void Dispose()
