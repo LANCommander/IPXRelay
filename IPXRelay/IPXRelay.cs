@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace IPXRelay
 {
-    public class IPXServer : IDisposable
+    public class IPXRelay : IDisposable
     {
         private static ILogger Logger;
         public int Port { get; set; } = 213;
@@ -19,13 +19,13 @@ namespace IPXRelay
         private byte[] Buffer = new byte[65536];
         private HashSet<IPXClientConnection> Connections = new HashSet<IPXClientConnection>();
 
-        public IPXServer(ILogger logger = null) {
+        public IPXRelay(ILogger logger = null) {
             Logger = logger;
 
             Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         }
 
-        public IPXServer(int port, ILogger logger = null) {
+        public IPXRelay(int port, ILogger logger = null) {
             Port = port;
             Logger = logger;
 
