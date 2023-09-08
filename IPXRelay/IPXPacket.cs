@@ -1,4 +1,6 @@
-﻿namespace IPXRelay
+﻿using System.IO;
+
+namespace IPXRelay
 {
     public class IPXPacket
     {
