@@ -22,6 +22,9 @@ namespace IPXRelay
         public delegate void OnClientConnectedHandler(object sender, ClientConnectedEventArgs e);
         public event OnClientConnectedHandler OnClientConnected;
 
+        public delegate void OnPacketReceiveErrorHandler(object sender, PacketReceiveErrorArgs e);
+        public event OnPacketReceiveErrorHandler OnPacketReceiveError;
+
         public IPXRelay(ILogger logger = null) {
             Logger = logger;
 
@@ -51,41 +54,56 @@ namespace IPXRelay
 
             while (Socket.IsBound)
             {
-                Logger?.LogTrace("Waiting for new IPX packet");
-
-                var result = await Socket.ReceiveMessageFromAsync(Buffer, Flags, remoteEndPoint);
-
-                Logger?.LogTrace("-------- START PACKET --------");
-
-                localEndPoint = new IPEndPoint(result.PacketInformation.Address, Port);
-                remoteEndPoint = result.RemoteEndPoint;
-
-                var packet = new IPXPacket(Buffer);
-
-                Logger?.LogTrace("Received IPX packet | Source: {RemoteEndPoint} | Destination: {LocalEndPoint}", remoteEndPoint, localEndPoint);
-
-                if (packet.Header.IsEcho())
+                try
                 {
-                    if (packet.Header.IsRegistration())
+                    Logger?.LogTrace("Waiting for new IPX packet");
+
+                    var result = await Socket.ReceiveMessageFromAsync(Buffer, Flags, remoteEndPoint);
+
+                    Logger?.LogTrace("-------- START PACKET --------");
+
+                    localEndPoint = new IPEndPoint(result.PacketInformation.Address, Port);
+                    remoteEndPoint = result.RemoteEndPoint;
+
+                    var packet = new IPXPacket(Buffer);
+
+                    Logger?.LogTrace("Received IPX packet | Source: {RemoteEndPoint} | Destination: {LocalEndPoint}", remoteEndPoint, localEndPoint);
+
+                    if (packet.Header.IsEcho())
                     {
-                        Logger?.LogTrace("Packet received is a registration request");
-
-                        ReserveClient((IPEndPoint)remoteEndPoint);
-
-                        await AcknowledgeClientAsync(localEndPoint, (IPEndPoint)remoteEndPoint);
-
-                        OnClientConnected.Invoke(this, new ClientConnectedEventArgs
+                        if (packet.Header.IsRegistration())
                         {
-                            RemoteEndPoint = (IPEndPoint)remoteEndPoint,
-                            LocalEndPoint = localEndPoint,
-                            Packet = packet
-                        });
+                            Logger?.LogTrace("Packet received is a registration request");
+
+                            ReserveClient((IPEndPoint)remoteEndPoint);
+
+                            await AcknowledgeClientAsync(localEndPoint, (IPEndPoint)remoteEndPoint);
+
+                            OnClientConnected.Invoke(this, new ClientConnectedEventArgs
+                            {
+                                RemoteEndPoint = (IPEndPoint)remoteEndPoint,
+                                LocalEndPoint = localEndPoint,
+                                Packet = packet
+                            });
+                        }
                     }
+
+                    await SendPacketAsync(packet);
+
+                    Logger?.LogTrace("--------  END PACKET  --------");
                 }
+                catch (Exception ex)
+                {
+                    Logger?.LogError(ex, "An unknown error occurred while processing an incoming packet");
 
-                await SendPacketAsync(packet);
-
-                Logger?.LogTrace("--------  END PACKET  --------");
+                    OnPacketReceiveError.Invoke(this, new PacketReceiveErrorArgs
+                    {
+                        RemoteEndPoint = (IPEndPoint)remoteEndPoint,
+                        LocalEndPoint = localEndPoint,
+                        Data = Buffer,
+                        Exception = ex
+                    });
+                }
             }
         }
 
