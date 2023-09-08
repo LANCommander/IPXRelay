@@ -35,11 +35,11 @@
                 packet.Write(Header.TransportControl);
                 packet.Write(Header.PacketType);
                 packet.Write(Header.DestinationAddress.Network);
-                packet.Write(Header.DestinationAddress.Node.Host.SwapBytes());
+                packet.Write(((uint)Header.DestinationAddress.Node.Host.Address));
                 packet.Write(Header.DestinationAddress.Node.Port);
                 packet.Write(Header.DestinationAddress.Socket.SwapBytes());
                 packet.Write(Header.SourceAddress.Network);
-                packet.Write(Header.SourceAddress.Node.Host.SwapBytes());
+                packet.Write(((uint)Header.SourceAddress.Node.Host.Address));
                 packet.Write(Header.SourceAddress.Node.Port);
                 packet.Write(Header.SourceAddress.Socket.SwapBytes());
 

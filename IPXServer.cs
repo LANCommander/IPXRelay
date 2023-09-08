@@ -79,7 +79,7 @@ namespace IPXRelay
             var source = packet.Header.SourceAddress.Node.ToIPEndPoint();
             var destination = packet.Header.DestinationAddress.Node.ToIPEndPoint();
 
-            if (packet.Header.DestinationAddress.Node.Host == 0xFFFFFFFF)
+            if (packet.Header.DestinationAddress.Node.Host.Address == 0xFFFFFFFF)
             {
                 Logger?.LogTrace("Broadcasting packet");
 

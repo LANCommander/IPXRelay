@@ -32,7 +32,7 @@
 
         internal bool IsRegistration()
         {
-            return DestinationAddress.Node.Host == 0x0;
+            return DestinationAddress.Node.Host.Address == 0x0;
         }
     }
 }
