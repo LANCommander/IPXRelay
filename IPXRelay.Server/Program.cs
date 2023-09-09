@@ -13,7 +13,7 @@ using (var relay = new IPXRelay())
         Console.WriteLine($"Client connected from {e.RemoteEndPoint}!");
     };
 
-    relay.OnPacketReceiveError += (sender, e) =>
+    relay.OnReceivePacketError += (sender, e) =>
     {
         Console.WriteLine($"Error receiving packet from {e.RemoteEndPoint} | Message: {e.Exception.Message}");
     };

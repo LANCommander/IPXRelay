@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace IPXRelayDotNet
 {
-    public class ClientConnectedEventArgs : EventArgs
+    public class OnClientConnectedEventArgs : EventArgs
     {
         public IPEndPoint RemoteEndPoint { get; set; }
         public IPEndPoint LocalEndPoint { get; set; }

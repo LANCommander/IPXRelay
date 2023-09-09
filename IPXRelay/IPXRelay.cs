@@ -19,11 +19,11 @@ namespace IPXRelayDotNet
         private byte[] Buffer = new byte[65536];
         private HashSet<IPXClientConnection> Connections = new HashSet<IPXClientConnection>();
 
-        public delegate void OnClientConnectedHandler(object sender, ClientConnectedEventArgs e);
+        public delegate void OnClientConnectedHandler(object sender, OnClientConnectedEventArgs e);
         public event OnClientConnectedHandler OnClientConnected;
 
-        public delegate void OnPacketReceiveErrorHandler(object sender, PacketReceiveErrorArgs e);
-        public event OnPacketReceiveErrorHandler OnPacketReceiveError;
+        public delegate void OnReceivePacketErrorHandler(object sender, OnReceivePacketErrorArgs e);
+        public event OnReceivePacketErrorHandler OnReceivePacketError;
 
         public IPXRelay(ILogger logger = null)
         {
@@ -81,7 +81,7 @@ namespace IPXRelayDotNet
 
                             await AcknowledgeClientAsync(localEndPoint, (IPEndPoint)remoteEndPoint);
 
-                            OnClientConnected.Invoke(this, new ClientConnectedEventArgs
+                            OnClientConnected?.Invoke(this, new OnClientConnectedEventArgs
                             {
                                 RemoteEndPoint = (IPEndPoint)remoteEndPoint,
                                 LocalEndPoint = localEndPoint,
@@ -98,7 +98,7 @@ namespace IPXRelayDotNet
                 {
                     Logger?.LogError(ex, "An unknown error occurred while processing an incoming packet");
 
-                    OnPacketReceiveError.Invoke(this, new PacketReceiveErrorArgs
+                    OnReceivePacketError?.Invoke(this, new OnReceivePacketErrorEventArgs
                     {
                         RemoteEndPoint = (IPEndPoint)remoteEndPoint,
                         LocalEndPoint = localEndPoint,
