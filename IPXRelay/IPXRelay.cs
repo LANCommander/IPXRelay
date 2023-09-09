@@ -22,7 +22,7 @@ namespace IPXRelayDotNet
         public delegate void OnClientConnectedHandler(object sender, OnClientConnectedEventArgs e);
         public event OnClientConnectedHandler OnClientConnected;
 
-        public delegate void OnReceivePacketErrorHandler(object sender, OnReceivePacketErrorArgs e);
+        public delegate void OnReceivePacketErrorHandler(object sender, OnReceivePacketErrorEventArgs e);
         public event OnReceivePacketErrorHandler OnReceivePacketError;
 
         public IPXRelay(ILogger logger = null)
