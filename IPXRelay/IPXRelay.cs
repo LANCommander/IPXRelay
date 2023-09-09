@@ -51,6 +51,11 @@ namespace IPXRelayDotNet
             Logger = null;
         }
 
+        public IEnumerable<IPXClientConnection> GetConnections()
+        {
+            return Connections;
+        }
+
         public async Task StartAsync()
         {
             Logger?.LogInformation("Binding IPX relay server on port {Port}", Port);
