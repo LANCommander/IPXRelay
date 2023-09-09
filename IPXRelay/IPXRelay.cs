@@ -25,6 +25,12 @@ namespace IPXRelayDotNet
         public delegate void OnReceivePacketErrorHandler(object sender, OnReceivePacketErrorEventArgs e);
         public event OnReceivePacketErrorHandler OnReceivePacketError;
 
+        public delegate void OnReceivePacketHandler(object sender, OnReceivePacketEventArgs e);
+        public event OnReceivePacketHandler OnReceivePacket;
+
+        public delegate void OnSendPacketHandler(object sender, OnSendPacketEventArgs e);
+        public event OnSendPacketHandler OnSendPacket;
+
         public IPXRelay(ILogger logger = null)
         {
             Logger = logger;
@@ -70,6 +76,13 @@ namespace IPXRelayDotNet
                     var packet = new IPXPacket(Buffer);
 
                     Logger?.LogTrace("Received IPX packet | Source: {RemoteEndPoint} | Destination: {LocalEndPoint}", remoteEndPoint, localEndPoint);
+
+                    OnReceivePacket?.Invoke(this, new OnReceivePacketEventArgs
+                    {
+                        RemoteEndPoint = (IPEndPoint)remoteEndPoint,
+                        LocalEndPoint = localEndPoint,
+                        Packet = packet
+                    });
 
                     if (packet.Header.IsEcho())
                     {
@@ -145,6 +158,13 @@ namespace IPXRelayDotNet
                     await Socket.SendToAsync(packet.Serialize(), connection.Endpoint);
                 }
             }
+
+            OnSendPacket?.Invoke(this, new OnSendPacketEventArgs
+            {
+                SourceEndPoint = source,
+                DestinationEndPoint = destination,
+                Packet = packet
+            });
         }
 
         private void ReserveClient(IPEndPoint remoteEndPoint)
