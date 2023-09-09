@@ -1,8 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
-    <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>D:\LANCommander.pfx</AssemblyOriginatorKeyFile>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Authors>pathartl</Authors>
@@ -12,10 +11,16 @@
     <PackageIcon>package-icon.png</PackageIcon>
     <RepositoryUrl>https://github.com/LANCommander/IPXRelay</RepositoryUrl>
     <PackageTags>IPX, DOSBox</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="..\package-icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
