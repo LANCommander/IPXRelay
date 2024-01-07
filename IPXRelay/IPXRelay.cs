@@ -28,6 +28,9 @@ namespace IPXRelayDotNet
         public delegate void OnReceivePacketHandler(object sender, OnReceivePacketEventArgs e);
         public event OnReceivePacketHandler OnReceivePacket;
 
+        public delegate void OnSendPacketErrorHandler(object sender, OnSendPacketErrorEventArgs e);
+        public event OnSendPacketErrorHandler OnSendPacketError;
+
         public delegate void OnSendPacketHandler(object sender, OnSendPacketEventArgs e);
         public event OnSendPacketHandler OnSendPacket;
 
@@ -73,44 +76,59 @@ namespace IPXRelayDotNet
 
                     var result = await Socket.ReceiveMessageFromAsync(Buffer, Flags, remoteEndPoint);
 
-                    Logger?.LogTrace("-------- START PACKET --------");
-
-                    localEndPoint = new IPEndPoint(result.PacketInformation.Address, Port);
-                    remoteEndPoint = result.RemoteEndPoint;
-
-                    var packet = new IPXPacket(Buffer);
-
-                    Logger?.LogTrace("Received IPX packet | Source: {RemoteEndPoint} | Destination: {LocalEndPoint}", remoteEndPoint, localEndPoint);
-
-                    OnReceivePacket?.Invoke(this, new OnReceivePacketEventArgs
+                    try
                     {
-                        RemoteEndPoint = (IPEndPoint)remoteEndPoint,
-                        LocalEndPoint = localEndPoint,
-                        Packet = packet
-                    });
+                        Logger?.LogTrace("-------- START PACKET --------");
 
-                    if (packet.Header.IsEcho())
-                    {
-                        if (packet.Header.IsRegistration())
+                        localEndPoint = new IPEndPoint(result.PacketInformation.Address, Port);
+                        remoteEndPoint = result.RemoteEndPoint;
+
+                        var packet = new IPXPacket(Buffer);
+
+                        Logger?.LogTrace("Received IPX packet | Source: {RemoteEndPoint} | Destination: {LocalEndPoint}", remoteEndPoint, localEndPoint);
+
+                        OnReceivePacket?.Invoke(this, new OnReceivePacketEventArgs
                         {
-                            Logger?.LogTrace("Packet received is a registration request");
+                            RemoteEndPoint = (IPEndPoint)remoteEndPoint,
+                            LocalEndPoint = localEndPoint,
+                            Packet = packet
+                        });
 
-                            ReserveClient((IPEndPoint)remoteEndPoint);
-
-                            await AcknowledgeClientAsync(localEndPoint, (IPEndPoint)remoteEndPoint);
-
-                            OnClientConnected?.Invoke(this, new OnClientConnectedEventArgs
+                        if (packet.Header.IsEcho())
+                        {
+                            if (packet.Header.IsRegistration())
                             {
-                                RemoteEndPoint = (IPEndPoint)remoteEndPoint,
-                                LocalEndPoint = localEndPoint,
-                                Packet = packet
-                            });
+                                Logger?.LogTrace("Packet received is a registration request");
+
+                                ReserveClient((IPEndPoint)remoteEndPoint);
+
+                                await AcknowledgeClientAsync(localEndPoint, (IPEndPoint)remoteEndPoint);
+
+                                OnClientConnected?.Invoke(this, new OnClientConnectedEventArgs
+                                {
+                                    RemoteEndPoint = (IPEndPoint)remoteEndPoint,
+                                    LocalEndPoint = localEndPoint,
+                                    Packet = packet
+                                });
+                            }
                         }
+
+                        await SendPacketAsync(packet);
+
+                        Logger?.LogTrace("--------  END PACKET  --------");
                     }
+                    catch (Exception ex)
+                    {
+                        Logger?.LogError(ex, "An unknown error occurred while forwarding an incoming packet");
 
-                    await SendPacketAsync(packet);
-
-                    Logger?.LogTrace("--------  END PACKET  --------");
+                        OnSendPacketError?.Invoke(this, new OnSendPacketErrorEventArgs
+                        {
+                            RemoteEndPoint = (IPEndPoint)remoteEndPoint,
+                            LocalEndPoint = localEndPoint,
+                            Data = Buffer,
+                            Exception = ex
+                        });
+                    }
                 }
                 catch (Exception ex)
                 {
