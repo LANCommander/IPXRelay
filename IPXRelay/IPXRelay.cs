@@ -164,8 +164,6 @@ namespace IPXRelayDotNet
                 {
                     Logger?.LogTrace("Sending IPX packet | Source: {SourceAddress}:{SourcePort} | Destination: {DestinationAddress}:{DestinationPort}", source.Address, source.Port, connection.Endpoint.Address, connection.Endpoint.Port);
 
-                    packet.Header.DestinationAddress.Node = new IPXNode(connection.Endpoint);
-
                     await Socket.SendToAsync(packet.Serialize(), connection.Endpoint);
                 }
             }
