@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace IPXRelayDotNet
@@ -59,7 +60,7 @@ namespace IPXRelayDotNet
             return Connections;
         }
 
-        public async Task StartAsync()
+        public async Task StartAsync(CancellationToken? cancellationToken = null)
         {
             Logger?.LogInformation("Binding IPX relay server on port {Port}", Port);
 
@@ -70,58 +71,75 @@ namespace IPXRelayDotNet
 
             while (Socket.IsBound)
             {
-                try
+                if (cancellationToken.HasValue && cancellationToken.Value.IsCancellationRequested)
+                    Stop();
+                else
                 {
-                    Logger?.LogTrace("Waiting for new IPX packet");
-
-                    var result = await Socket.ReceiveMessageFromAsync(Buffer, Flags, remoteEndPoint);
-
                     try
                     {
-                        Logger?.LogTrace("-------- START PACKET --------");
+                        Logger?.LogTrace("Waiting for new IPX packet");
 
-                        localEndPoint = new IPEndPoint(result.PacketInformation.Address, Port);
-                        remoteEndPoint = result.RemoteEndPoint;
+                        var result = await Socket.ReceiveMessageFromAsync(Buffer, Flags, remoteEndPoint);
 
-                        var packet = new IPXPacket(Buffer);
-
-                        Logger?.LogTrace("Received IPX packet | Source: {RemoteEndPoint} | Destination: {LocalEndPoint}", remoteEndPoint, localEndPoint);
-
-                        OnReceivePacket?.Invoke(this, new OnReceivePacketEventArgs
+                        try
                         {
-                            RemoteEndPoint = (IPEndPoint)remoteEndPoint,
-                            LocalEndPoint = localEndPoint,
-                            Packet = packet
-                        });
+                            Logger?.LogTrace("-------- START PACKET --------");
 
-                        if (packet.Header.IsEcho())
-                        {
-                            if (packet.Header.IsRegistration())
+                            localEndPoint = new IPEndPoint(result.PacketInformation.Address, Port);
+                            remoteEndPoint = result.RemoteEndPoint;
+
+                            var packet = new IPXPacket(Buffer);
+
+                            Logger?.LogTrace("Received IPX packet | Source: {RemoteEndPoint} | Destination: {LocalEndPoint}", remoteEndPoint, localEndPoint);
+
+                            OnReceivePacket?.Invoke(this, new OnReceivePacketEventArgs
                             {
-                                Logger?.LogTrace("Packet received is a registration request");
+                                RemoteEndPoint = (IPEndPoint)remoteEndPoint,
+                                LocalEndPoint = localEndPoint,
+                                Packet = packet
+                            });
 
-                                ReserveClient((IPEndPoint)remoteEndPoint);
-
-                                await AcknowledgeClientAsync(localEndPoint, (IPEndPoint)remoteEndPoint);
-
-                                OnClientConnected?.Invoke(this, new OnClientConnectedEventArgs
+                            if (packet.Header.IsEcho())
+                            {
+                                if (packet.Header.IsRegistration())
                                 {
-                                    RemoteEndPoint = (IPEndPoint)remoteEndPoint,
-                                    LocalEndPoint = localEndPoint,
-                                    Packet = packet
-                                });
+                                    Logger?.LogTrace("Packet received is a registration request");
+
+                                    ReserveClient((IPEndPoint)remoteEndPoint);
+
+                                    await AcknowledgeClientAsync(localEndPoint, (IPEndPoint)remoteEndPoint);
+
+                                    OnClientConnected?.Invoke(this, new OnClientConnectedEventArgs
+                                    {
+                                        RemoteEndPoint = (IPEndPoint)remoteEndPoint,
+                                        LocalEndPoint = localEndPoint,
+                                        Packet = packet
+                                    });
+                                }
                             }
+
+                            await SendPacketAsync(packet);
+
+                            Logger?.LogTrace("--------  END PACKET  --------");
                         }
+                        catch (Exception ex)
+                        {
+                            Logger?.LogError(ex, "An unknown error occurred while forwarding an incoming packet");
 
-                        await SendPacketAsync(packet);
-
-                        Logger?.LogTrace("--------  END PACKET  --------");
+                            OnSendPacketError?.Invoke(this, new OnSendPacketErrorEventArgs
+                            {
+                                RemoteEndPoint = (IPEndPoint)remoteEndPoint,
+                                LocalEndPoint = localEndPoint,
+                                Data = Buffer,
+                                Exception = ex
+                            });
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Logger?.LogError(ex, "An unknown error occurred while forwarding an incoming packet");
+                        Logger?.LogError(ex, "An unknown error occurred while processing an incoming packet");
 
-                        OnSendPacketError?.Invoke(this, new OnSendPacketErrorEventArgs
+                        OnReceivePacketError?.Invoke(this, new OnReceivePacketErrorEventArgs
                         {
                             RemoteEndPoint = (IPEndPoint)remoteEndPoint,
                             LocalEndPoint = localEndPoint,
@@ -129,18 +147,6 @@ namespace IPXRelayDotNet
                             Exception = ex
                         });
                     }
-                }
-                catch (Exception ex)
-                {
-                    Logger?.LogError(ex, "An unknown error occurred while processing an incoming packet");
-
-                    OnReceivePacketError?.Invoke(this, new OnReceivePacketErrorEventArgs
-                    {
-                        RemoteEndPoint = (IPEndPoint)remoteEndPoint,
-                        LocalEndPoint = localEndPoint,
-                        Data = Buffer,
-                        Exception = ex
-                    });
                 }
             }
         }
