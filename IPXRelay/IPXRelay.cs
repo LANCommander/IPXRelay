@@ -79,7 +79,7 @@ namespace IPXRelayDotNet
                     {
                         Logger?.LogTrace("Waiting for new IPX packet");
 
-                        var result = await Socket.ReceiveMessageFromAsync(Buffer, Flags, remoteEndPoint);
+                        var result = await Socket.ReceiveMessageFromAsync(Buffer, Flags, remoteEndPoint, cancellationToken.GetValueOrDefault());
 
                         try
                         {
