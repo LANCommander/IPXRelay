@@ -37,4 +37,8 @@ Event handlers exist for the following:
 - `OnClientConnected`: Fires whenever a client connects
 - `OnReceivePacketError`: Fires when an exception occurs while trying to receive a packet
 - `OnReceivePacket`: Fires when a packet has been received and deserialized into an `IPXPacket`
-- `OnSendPacketHandler`: Fires after a packet has been sent to a client
+- `OnSendPacket`: Fires after a packet has been sent to a client
+- `OnSendPacketError`: Fires when an exception occurs while trying to send a packet to a client
+
+### Cancellation Tokens
+The `StartAsync` method supports cancellation tokens. This can be used to gracefully stop the relay.
