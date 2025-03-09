@@ -79,7 +79,8 @@ namespace IPXRelayDotNet
                     {
                         Logger?.LogTrace("Waiting for new IPX packet");
 
-                        var result = await Socket.ReceiveMessageFromAsync(Buffer, Flags, remoteEndPoint, cancellationToken.GetValueOrDefault());
+                        var result = await Socket.ReceiveMessageFromAsync(Buffer, Flags, remoteEndPoint,
+                            cancellationToken.GetValueOrDefault());
 
                         try
                         {
@@ -90,7 +91,9 @@ namespace IPXRelayDotNet
 
                             var packet = new IPXPacket(Buffer);
 
-                            Logger?.LogTrace("Received IPX packet | Source: {RemoteEndPoint} | Destination: {LocalEndPoint}", remoteEndPoint, localEndPoint);
+                            Logger?.LogTrace(
+                                "Received IPX packet | Source: {RemoteEndPoint} | Destination: {LocalEndPoint}",
+                                remoteEndPoint, localEndPoint);
 
                             OnReceivePacket?.Invoke(this, new OnReceivePacketEventArgs
                             {
@@ -135,6 +138,10 @@ namespace IPXRelayDotNet
                             });
                         }
                     }
+                    catch (OperationCanceledException)
+                    {
+                        Stop();
+                    }
                     catch (Exception ex)
                     {
                         Logger?.LogError(ex, "An unknown error occurred while processing an incoming packet");
@@ -153,7 +160,14 @@ namespace IPXRelayDotNet
 
         public void Stop()
         {
-            Socket.Close();
+            try
+            {
+                Socket.Shutdown(SocketShutdown.Both);
+            }
+            finally
+            {
+                Socket.Close();
+            }
         }
 
         private async Task SendPacketAsync(IPXPacket packet)
